@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Memory Game</string>
+    <string name="welcome_message">Welcome!</string>
+    <string name="age">Please enter your age</string>
+    <string name="name">Please enter your name</string>
+    <string name="start">Start A New Game</string>
+    <string name="diff_btn_easy">Easy</string>
+    <string name="diff_btn_medium">Medium</string>
+    <string name="diff_btn_hard">Hard</string>
+    <string name="diff_header">Hello %1$s!\n%2$s years old!\nSelect game Difficulty:</string>
+    <string name="game_end_message">"Time's up, game over!"</string>
+    <string name="game_win_message">"Congratulations, You Won!\nSelect game Difficulty:"</string>
+    <string name="name_hint"> Enter your name</string>
+    <string name="age_hint"> Enter your age</string>
+</resources>
