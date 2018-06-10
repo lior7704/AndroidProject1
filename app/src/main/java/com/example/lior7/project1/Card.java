@@ -23,6 +23,7 @@ public class Card extends AppCompatImageView{
     public boolean getState(){
         return state;
     }
+
     public void setState(boolean flag){
         this.state = flag;
     }

@@ -2,6 +2,7 @@ package com.example.lior7.project1;
 
 import android.content.Intent;
 import android.os.CountDownTimer;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.GridView;
@@ -15,6 +16,8 @@ import android.widget.Toast;
 import java.util.*;
 import java.util.Arrays;
 
+import tyrantgit.explosionfield.ExplosionField;
+
 public class GameActivity extends AppCompatActivity {
     private int numOfCubes, maxTime, numOfMatches = 0, sizeOfMatrix, numClick = 0, firstClick = -1, secondClick= -1;
     private String name;
@@ -27,12 +30,13 @@ public class GameActivity extends AppCompatActivity {
     private Runnable matchRunnable;
     private Handler handler;
     private Random rnd = new Random();
+    ExplosionField explosionField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-
+        explosionField = ExplosionField.attach2Window(this);
         Bundle data = getIntent().getExtras();
         numOfCubes = data.getInt(DifficultyActivity.NUM_OF_CUBES);
         maxTime = data.getInt(DifficultyActivity.TIME);
@@ -65,7 +69,7 @@ public class GameActivity extends AppCompatActivity {
                 if(!((Card)v).getState() && !timeIsUp) {
                     numClick++;
                     Card img_view = (Card) v;
-                    // Show imageView animal picture
+                    // Show imageView picture
                     img_view.setImageResource(img_view.getImageId());
                     img_view.setState(true);
 
@@ -90,8 +94,11 @@ public class GameActivity extends AppCompatActivity {
 
     private void gameEnd(){
         String result = "";
-        if(numOfMatches == sizeOfMatrix / 2)
+        if(numOfMatches == sizeOfMatrix / 2) {
             result = getString(R.string.game_win_message);
+            // TODO: add animation function here
+
+        }
         Intent resIntent = new Intent();
         resIntent.putExtra(DifficultyActivity.RESULT, result);
         setResult(RESULT_OK, resIntent);
@@ -112,6 +119,12 @@ public class GameActivity extends AppCompatActivity {
             public void onFinish() {
                 timeIsUp = true;
                 textViewTimer.setText(String.format("%d:%02d", 0 , 0));
+                // Explosion animations
+                for(int i=0; i<gridview.getChildCount(); i++) {
+                    View child = gridview.getChildAt(i);
+                    explosionField.explode(child);
+                    SystemClock.sleep(1000);
+                }
                 // Show game end message
                 Toast.makeText(getApplicationContext(), R.string.game_end_message, Toast.LENGTH_LONG).show();
                 gameEnd();
