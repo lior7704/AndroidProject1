@@ -12,4 +12,6 @@
     <string name="game_win_message">"Congratulations, You Won!\nSelect game Difficulty:"</string>
     <string name="name_hint"> Enter your name</string>
     <string name="age_hint"> Enter your age</string>
+    <string name="map">Map</string>
+    <string name="table">Table</string>
 </resources>

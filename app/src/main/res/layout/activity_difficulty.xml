@@ -66,7 +66,7 @@
     <TextView
         android:id="@+id/textViewHeader"
         android:layout_width="313dp"
-        android:layout_height="152dp"
+        android:layout_height="146dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="@string/diff_header"
