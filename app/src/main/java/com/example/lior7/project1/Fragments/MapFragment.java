@@ -1,16 +1,18 @@
-package com.example.lior7.project1;
+package com.example.lior7.project1.Fragments;
 
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class TableFragment extends Fragment {
+import com.example.lior7.project1.R;
+
+public class MapFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.table_view, container, false);
+        return inflater.inflate(R.layout.map_view, container, false);
     }
 }

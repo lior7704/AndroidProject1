@@ -1,9 +1,11 @@
-package com.example.lior7.project1;
+package com.example.lior7.project1.Adapters;
 
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+
+import com.example.lior7.project1.Object_Classes.Card;
 
 
 public class ImageAdapter extends BaseAdapter {
@@ -44,10 +46,9 @@ public class ImageAdapter extends BaseAdapter {
         } else {
             imageView = (Card) convertView;
         }
-        imageView.setImageResource(Card.DEFAULT_IMAGE_ID);
+        imageView.setImageResource(Card.getDefaultImageId());
         imageView.setImageId(images[position]);
         return imageView;
-
     }
 
 }

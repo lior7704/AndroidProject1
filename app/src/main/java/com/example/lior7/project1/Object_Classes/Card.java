@@ -1,7 +1,9 @@
-package com.example.lior7.project1;
+package com.example.lior7.project1.Object_Classes;
 
 import android.content.Context;
 import android.support.v7.widget.AppCompatImageView;
+
+import com.example.lior7.project1.R;
 
 public class Card extends AppCompatImageView{
     private int imageId;
@@ -26,5 +28,9 @@ public class Card extends AppCompatImageView{
 
     public void setState(boolean flag){
         this.state = flag;
+    }
+
+    public static int getDefaultImageId() {
+        return DEFAULT_IMAGE_ID;
     }
 }

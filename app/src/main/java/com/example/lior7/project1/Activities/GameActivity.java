@@ -1,4 +1,4 @@
-package com.example.lior7.project1;
+package com.example.lior7.project1.Activities;
 
 import android.content.Intent;
 import android.os.CountDownTimer;
@@ -12,6 +12,10 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.lior7.project1.Object_Classes.Card;
+import com.example.lior7.project1.Adapters.ImageAdapter;
+import com.example.lior7.project1.R;
 
 import java.util.*;
 import java.util.Arrays;
@@ -30,6 +34,7 @@ public class GameActivity extends AppCompatActivity {
     private Runnable matchRunnable;
     private Handler handler;
     private Random rnd = new Random();
+    private int score = 0;
     ExplosionField explosionField;
 
     @Override
@@ -159,9 +164,9 @@ public class GameActivity extends AppCompatActivity {
             public void run() {
                 // If images are not equal return to default pictures
                 if (imgView1.getImageId() != imgView2.getImageId()) {
-                    imgView1.setImageResource(Card.DEFAULT_IMAGE_ID);
+                    imgView1.setImageResource(Card.getDefaultImageId());
                     imgView1.setState(false);
-                    imgView2.setImageResource(Card.DEFAULT_IMAGE_ID);
+                    imgView2.setImageResource(Card.getDefaultImageId());
                     imgView2.setState(false);
                 } else
                     numOfMatches++;
