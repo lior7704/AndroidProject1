@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.widget.Button;
 import com.example.lior7.project1.Fragments.MapFragment;
+import com.example.lior7.project1.Fragments.TableFragment;
 import com.example.lior7.project1.R;
 
 public class HighScoresActivity extends FragmentActivity {
@@ -28,6 +29,7 @@ public class HighScoresActivity extends FragmentActivity {
         tableButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                tableFragment = new TableFragment();
                 replaceFragment(tableFragment);
             }
         });

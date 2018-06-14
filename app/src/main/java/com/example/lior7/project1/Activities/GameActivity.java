@@ -1,8 +1,14 @@
 package com.example.lior7.project1.Activities;
 
+import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.GridView;
@@ -12,30 +18,42 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.example.lior7.project1.Object_Classes.Card;
 import com.example.lior7.project1.Adapters.ImageAdapter;
 import com.example.lior7.project1.R;
-
 import java.util.*;
 import java.util.Arrays;
-
 import tyrantgit.explosionfield.ExplosionField;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements SensorEventListener {
+    private final float ROTATE_DIFF = 5;
     private int numOfCubes, maxTime, numOfMatches = 0, sizeOfMatrix, numClick = 0, firstClick = -1, secondClick= -1;
     private String name;
     private int borderColor;
     private GridView gridview;
-    private TextView textViewName, textViewTimer;
-    private ImageAdapter imageAdapter;
+    private TextView textViewTimer;
     private boolean timeIsUp = false;
     private CountDownTimer countDownTimer;
     private Runnable matchRunnable;
     private Handler handler;
     private Random rnd = new Random();
-    private int score = 0;
     ExplosionField explosionField;
+    private int score = 0;
+    private Stack<Card> matchStack;
+
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    private Sensor mMagnetometer;
+
+    private float[] mLastAccelerometer = new float[3];
+    private float[] mLastMagnetometer = new float[3];
+    private boolean mLastAccelerometerSet = false;
+    private boolean mLastMagnetometerSet = false;
+
+    private float[] mR = new float[9];
+    private float[] mOrientation = new float[3];
+
+    private float[] initialPos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +61,16 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
         explosionField = ExplosionField.attach2Window(this);
         Bundle data = getIntent().getExtras();
-        numOfCubes = data.getInt(DifficultyActivity.NUM_OF_CUBES);
-        maxTime = data.getInt(DifficultyActivity.TIME);
-        name = data.getString(MainActivity.NAME);
+        if (data != null) {
+            numOfCubes = data.getInt(DifficultyActivity.NUM_OF_CUBES);
+            maxTime = data.getInt(DifficultyActivity.TIME);
+            name = data.getString(MainActivity.NAME);
+        }
+        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        matchStack = new Stack();
 
         bindUI();
         startTimer();
@@ -53,7 +78,7 @@ public class GameActivity extends AppCompatActivity {
 
     private void bindUI()
     {
-        textViewName = findViewById(R.id.textViewName);
+        TextView textViewName = findViewById(R.id.textViewName);
         textViewName.setText(name);
         textViewTimer = findViewById(R.id.textViewTimer);
         gridview = findViewById(R.id.gridView);
@@ -65,7 +90,7 @@ public class GameActivity extends AppCompatActivity {
         }
 
         final Integer[] images = getImages();
-        imageAdapter = new ImageAdapter(this, images);
+        ImageAdapter imageAdapter = new ImageAdapter(this, images);
         gridview.setAdapter(imageAdapter);
         gridview.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
@@ -73,20 +98,20 @@ public class GameActivity extends AppCompatActivity {
                 // The image is defaultImage and Timer is still running
                 if(!((Card)v).getState() && !timeIsUp) {
                     numClick++;
-                    Card img_view = (Card) v;
+                    Card card = (Card) v;
                     // Show imageView picture
-                    img_view.setImageResource(img_view.getImageId());
-                    img_view.setState(true);
+                    card.setImageResource(card.getImageId());
+                    card.setState(true);
 
                     if(numClick % 2 != 0) {
                         firstClick = position;
                         // Mark card, each two cards marked with the same color
                         borderColor = rnd.nextInt();
-                        setBorderColor(img_view, borderColor);
+                        setBorderColor(card, borderColor);
                     }
                     else {
                         secondClick = position;
-                        setBorderColor(img_view, borderColor);
+                        setBorderColor(card, borderColor);
                     }
                     if(firstClick != -1 && secondClick != -1){
                         checkForCouple();
@@ -146,7 +171,17 @@ public class GameActivity extends AppCompatActivity {
             countDownTimer.cancel();
         if(handler != null && matchRunnable != null)
             handler.removeCallbacks(matchRunnable);
+        mSensorManager.unregisterListener(this);
         finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mLastAccelerometerSet = false;
+        mLastMagnetometerSet = false;
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void setBorderColor(Card imageView, int borderColor){
@@ -155,27 +190,82 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void checkForCouple(){
-        final Card imgView1 = (Card)gridview.getChildAt(firstClick);
-        final Card imgView2 = (Card)gridview.getChildAt(secondClick);
+        final Card card1 = (Card)gridview.getChildAt(firstClick);
+        final Card card2 = (Card)gridview.getChildAt(secondClick);
         firstClick = secondClick = -1;
         handler = new Handler();
         matchRunnable = new Runnable() {
             @Override
             public void run() {
                 // If images are not equal return to default pictures
-                if (imgView1.getImageId() != imgView2.getImageId()) {
-                    imgView1.setImageResource(Card.getDefaultImageId());
-                    imgView1.setState(false);
-                    imgView2.setImageResource(Card.getDefaultImageId());
-                    imgView2.setState(false);
-                } else
+                if (card1.getImageId() != card2.getImageId()) {
+                    card1.setImageResource(Card.getDefaultImageId());
+                    card1.setState(false);
+                    card2.setImageResource(Card.getDefaultImageId());
+                    card2.setState(false);
+                }
+                else{
                     numOfMatches++;
+                    // Push cards into stack
+                    matchStack.push(card1);
+                    matchStack.push(card2);
+                }
+
                 if(numOfMatches == sizeOfMatrix / 2){ // User Won
                     gameEnd();
                 }
                 // Remove marking
-                setBorderColor(imgView1, getResources().getColor(R.color.colorBackGroundWhite));
-                setBorderColor(imgView2, getResources().getColor(R.color.colorBackGroundWhite));
+                setBorderColor(card1, getResources().getColor(R.color.colorBackGroundWhite));
+                setBorderColor(card2, getResources().getColor(R.color.colorBackGroundWhite));
+            }
+        };
+        handler.postDelayed(matchRunnable, 1000);
+    }
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor == mAccelerometer) {
+            System.arraycopy(event.values, 0, mLastAccelerometer, 0, event.values.length);
+            mLastAccelerometerSet = true;
+        } else if (event.sensor == mMagnetometer) {
+            System.arraycopy(event.values, 0, mLastMagnetometer, 0, event.values.length);
+            mLastMagnetometerSet = true;
+        }
+        if (mLastAccelerometerSet && mLastMagnetometerSet) {
+            SensorManager.getRotationMatrix(mR, null, mLastAccelerometer, mLastMagnetometer);
+            SensorManager.getOrientation(mR, mOrientation);
+            if(initialPos == null){
+                initialPos = new float[3];
+                initialPos[0] = Math.abs(mOrientation[0]);
+                initialPos[1] = Math.abs(mOrientation[1]);
+                initialPos[2] = Math.abs(mOrientation[1]);
+            }
+            if(Math.abs(mOrientation[0]) - initialPos[0] > ROTATE_DIFF ||
+                Math.abs(mOrientation[1]) - initialPos[1] > ROTATE_DIFF ||
+                Math.abs(mOrientation[2]) - initialPos[2] > ROTATE_DIFF){
+                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                if(v != null){
+                    v.vibrate(500);
+                }
+                this.revertLastMatch();
+            }
+        }
+    }
+
+    private void revertLastMatch(){
+        handler = new Handler();
+        matchRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Card card1 = matchStack.pop();
+                Card card2 = matchStack.pop();
+                card1.setImageResource(Card.getDefaultImageId());
+                card1.setState(false);
+                card2.setImageResource(Card.getDefaultImageId());
+                card2.setState(false);
+                numOfMatches--;
             }
         };
         handler.postDelayed(matchRunnable, 1000);
