@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     tools:context="com.example.lior7.project1.Activities.MainActivity">
 
+    <nl.dionsegijn.konfetti.KonfettiView
+        android:id="@+id/konfettiView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <GridView
         android:id="@+id/gridView"
         android:layout_width="wrap_content"

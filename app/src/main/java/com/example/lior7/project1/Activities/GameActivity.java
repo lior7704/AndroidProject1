@@ -2,6 +2,7 @@ package com.example.lior7.project1.Activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -23,10 +24,15 @@ import com.example.lior7.project1.Adapters.ImageAdapter;
 import com.example.lior7.project1.R;
 import java.util.*;
 import java.util.Arrays;
+
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
 import tyrantgit.explosionfield.ExplosionField;
 
 public class GameActivity extends AppCompatActivity implements SensorEventListener {
-    private final float ROTATE_DIFF = 5;
+
+    //region Variables
     private int numOfCubes, maxTime, numOfMatches = 0, sizeOfMatrix, numClick = 0, firstClick = -1, secondClick= -1;
     private String name;
     private int borderColor;
@@ -38,6 +44,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     private Handler handler;
     private Random rnd = new Random();
     ExplosionField explosionField;
+    KonfettiView konfettiView;
     private int score = 0;
     private Stack<Card> matchStack;
 
@@ -54,6 +61,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
     private float[] mOrientation = new float[3];
 
     private float[] initialPos;
+    //endregion
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +74,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
             maxTime = data.getInt(DifficultyActivity.TIME);
             name = data.getString(MainActivity.NAME);
         }
+        // Sign up to sensor services
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -82,6 +91,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         textViewName.setText(name);
         textViewTimer = findViewById(R.id.textViewTimer);
         gridview = findViewById(R.id.gridView);
+        konfettiView = findViewById(R.id.konfettiView);
 
         // In easy level, choose the number of columns to be 2
         if (numOfCubes == DifficultyActivity.NUM_CARDS_EASY){
@@ -119,20 +129,35 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
         });
-
     }
 
     private void gameEnd(){
         String result = "";
         if(numOfMatches == sizeOfMatrix / 2) {
             result = getString(R.string.game_win_message);
-            // TODO: add animation function here
+            // Confetti animation
+            konfettiView.build()
+                    .addColors(Color.YELLOW, Color.GREEN, Color.MAGENTA)
+                    .setDirection(0.0, 359.0)
+                    .setSpeed(1f, 5f)
+                    .setFadeOutEnabled(true)
+                    .setTimeToLive(2000L)
+                    .addShapes(Shape.RECT, Shape.CIRCLE)
+                    .addSizes(new Size(12, 5))
+                    .setPosition(-50f, konfettiView.getWidth() + 50f, -50f, -50f)
+                    .stream(300, 5000L);
 
         }
-        Intent resIntent = new Intent();
-        resIntent.putExtra(DifficultyActivity.RESULT, result);
-        setResult(RESULT_OK, resIntent);
-        finish();
+        final String RES = result;
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                Intent resIntent = new Intent();
+                resIntent.putExtra(DifficultyActivity.RESULT, RES);
+                setResult(RESULT_OK, resIntent);
+                finish();
+            }
+        }, 3000);
     }
 
     private void startTimer()
@@ -153,7 +178,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 for(int i=0; i<gridview.getChildCount(); i++) {
                     View child = gridview.getChildAt(i);
                     explosionField.explode(child);
-                    SystemClock.sleep(1000);
+                    //SystemClock.sleep(1000);
                 }
                 // Show game end message
                 Toast.makeText(getApplicationContext(), R.string.game_end_message, Toast.LENGTH_LONG).show();
@@ -242,9 +267,10 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
                 initialPos[1] = Math.abs(mOrientation[1]);
                 initialPos[2] = Math.abs(mOrientation[1]);
             }
-            if(Math.abs(mOrientation[0]) - initialPos[0] > ROTATE_DIFF ||
-                Math.abs(mOrientation[1]) - initialPos[1] > ROTATE_DIFF ||
-                Math.abs(mOrientation[2]) - initialPos[2] > ROTATE_DIFF){
+            float rotationLimit = 5;
+            if(Math.abs(mOrientation[0]) - initialPos[0] > rotationLimit ||
+                Math.abs(mOrientation[1]) - initialPos[1] > rotationLimit ||
+                Math.abs(mOrientation[2]) - initialPos[2] > rotationLimit){
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 if(v != null){
                     v.vibrate(500);
@@ -297,7 +323,7 @@ public class GameActivity extends AppCompatActivity implements SensorEventListen
         return (Integer[]) list.toArray();
     }
 
-    // References to animal images
+    // References to images
     Integer[] cards = {
             R.drawable.card1, R.drawable.card2, R.drawable.card3,
             R.drawable.card4, R.drawable.card5, R.drawable.card6,
