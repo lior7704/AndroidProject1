@@ -31,8 +31,9 @@ dependencies {
     // Confetti animation
     compile 'nl.dionsegijn:konfetti:1.1.2'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-
-
+    // Map
+    implementation 'com.google.android.gms:play-services-maps:15.0.1'
+    implementation "com.google.android.gms:play-services-location:15.0.1"
 }
 repositories {
     mavenCentral()

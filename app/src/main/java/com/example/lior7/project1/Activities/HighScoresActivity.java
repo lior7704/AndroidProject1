@@ -9,7 +9,11 @@ import android.view.View;
 import android.widget.Button;
 import com.example.lior7.project1.Fragments.MapFragment;
 import com.example.lior7.project1.Fragments.TableFragment;
+import com.example.lior7.project1.Object_Classes.UserDetails;
+import com.example.lior7.project1.Persistent_Data_Storage.DBController;
 import com.example.lior7.project1.R;
+
+import java.util.List;
 
 public class HighScoresActivity extends FragmentActivity {
 
@@ -17,6 +21,11 @@ public class HighScoresActivity extends FragmentActivity {
     private Button tableButton;
     Fragment tableFragment;
     Fragment mapFragment;
+
+    public static DBController userDetailsDB;
+    public static boolean givePermission;
+
+    public static List<UserDetails> userDetailsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
